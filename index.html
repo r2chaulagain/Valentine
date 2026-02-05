@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pumpkin, be my Valentine? 💖</title>
+
+  <style>
+    :root{
+      --pink:#ff4d88;
+      --bg:#ffe6f0;
+    }
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      height:100vh;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--bg);
+      font-family: "Comic Sans MS", cursive, system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      overflow:hidden;
+    }
+
+    /* floating emoji background */
+    .emoji-bg{
+      position:fixed;
+      inset:0;
+      z-index:0;
+      pointer-events:none;
+    }
+    .emoji{
+      position:absolute;
+      font-size:2rem;
+      opacity:.85;
+      animation: floatUp linear infinite;
+      filter: drop-shadow(0 6px 8px rgba(0,0,0,.08));
+    }
+    @keyframes floatUp{
+      from { transform: translateY(110vh) rotate(0deg); }
+      to   { transform: translateY(-140vh) rotate(360deg); }
+    }
+
+    .card{
+      position:relative;
+      z-index:2;
+      width:min(560px, 92vw);
+      background:#fff;
+      padding:34px 28px 26px;
+      border-radius:26px;
+      text-align:center;
+      box-shadow:0 14px 40px rgba(0,0,0,.18);
+      border: 3px solid rgba(255,77,136,.18);
+    }
+
+    h1{
+      margin:0 0 10px;
+      font-size:2.2rem;
+      color:var(--pink);
+      line-height:1.15;
+    }
+    .subtitle{
+      margin:0 0 22px;
+      color:#b03a64;
+      font-size:1.05rem;
+    }
+
+    .stage{
+      position:relative;
+      height:150px;
+      width:100%;
+      border-radius:18px;
+      background: linear-gradient(180deg, rgba(255,77,136,.08), rgba(255,255,255,0));
+      overflow:hidden;
+    }
+
+    button{
+      font-size:1.2rem;
+      padding:12px 30px;
+      border:none;
+      border-radius:999px;
+      cursor:pointer;
+      position:absolute;
+      top:60px;
+      user-select:none;
+      touch-action:none;
+      box-shadow:0 10px 22px rgba(0,0,0,.12);
+      transition: transform .12s ease;
+    }
+    button:active{ transform: scale(.98); }
+
+    #yes{
+      left:28%;
+      background:var(--pink);
+      color:#fff;
+    }
+    #yes:hover{ filter: brightness(.95); }
+
+    #no{
+      left:56%;
+      background:#d9d9d9;
+      color:#222;
+    }
+
+    /* Full-screen overlay for message */
+    .overlay{
+      position:fixed;
+      inset:0;
+      z-index:5;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background: radial-gradient(circle at top, rgba(255,255,255,.75), rgba(255,230,240,.92));
+      padding:24px;
+      text-align:center;
+      overflow:hidden;
+    }
+    .overlay.show{ display:flex; }
+
+    .messageBox{
+      width:min(920px, 94vw);
+      background: rgba(255,255,255,.92);
+      border-radius:26px;
+      padding:22px 18px;
+      box-shadow:0 18px 60px rgba(0,0,0,.18);
+      border: 2px solid rgba(255,77,136,.18);
+      position:relative;
+      z-index:7;
+    }
+
+    .messageGrid{
+      display:grid;
+      grid-template-columns: 1fr;
+      gap:14px;
+      align-items:center;
+    }
+
+    /* On bigger screens, show photo + message side-by-side */
+    @media (min-width: 780px){
+      .messageGrid{
+        grid-template-columns: 320px 1fr;
+        gap:18px;
+        text-align:left;
+      }
+      .messageBox h2{ text-align:left; }
+    }
+
+    .messageBox h2{
+      margin:0 0 12px;
+      color:var(--pink);
+      font-size:2.1rem;
+      text-align:center;
+    }
+
+    /* Photo */
+    .photoWrap{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+    }
+    .photo{
+      width:min(320px, 78vw);
+      aspect-ratio: 3 / 4;
+      border-radius:22px;
+      overflow:hidden;
+      box-shadow:0 14px 40px rgba(0,0,0,.18);
+      border: 3px solid rgba(255,77,136,.22);
+      background: rgba(255,255,255,.6);
+      position:relative;
+    }
+    .photo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+    .photoBadge{
+      position:absolute;
+      bottom:10px;
+      left:10px;
+      padding:8px 12px;
+      border-radius:999px;
+      background: rgba(255,77,136,.90);
+      color:white;
+      font-size:0.95rem;
+      box-shadow:0 10px 22px rgba(0,0,0,.16);
+    }
+
+    .messageText{
+      margin:0;
+      font-size:1.12rem;
+      line-height:1.58;
+      color:#4a1f33;
+      white-space:pre-wrap;
+      min-height: 170px;
+    }
+
+    /* Typewriter cursor */
+    .cursor{
+      display:inline-block;
+      width: 10px;
+      margin-left: 2px;
+      color: #ff4d88;
+      animation: blink 0.75s step-end infinite;
+    }
+    @keyframes blink{
+      50% { opacity: 0; }
+    }
+
+    /* Confetti canvas */
+    #fx{
+      position:fixed;
+      inset:0;
+      z-index:6;
+      pointer-events:none;
+      display:none;
+    }
+    #fx.show{ display:block; }
+
+    /* Hearts floating during message */
+    #hearts{
+      position:fixed;
+      inset:0;
+      z-index:6;          /* below messageBox (7), above overlay bg */
+      pointer-events:none;
+      display:none;
+      overflow:hidden;
+    }
+    #hearts.show{ display:block; }
+
+    .heart{
+      position:absolute;
+      bottom:-40px;
+      font-size: 22px;
+      opacity: 0.85;
+      animation: rise linear forwards;
+      filter: drop-shadow(0 10px 10px rgba(0,0,0,.10));
+      will-change: transform, opacity;
+    }
+    @keyframes rise{
+      0%   { transform: translateY(0) translateX(0) scale(0.9) rotate(0deg); opacity: 0; }
+      10%  { opacity: 0.9; }
+      100% { transform: translateY(-115vh) translateX(var(--drift)) scale(1.35) rotate(var(--rot)); opacity: 0; }
+    }
+
+    /* Tiny hint */
+    .hint{
+      margin-top:14px;
+      font-size:.95rem;
+      color:#a24a6e;
+      opacity:.9;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Emoji background -->
+  <div class="emoji-bg" id="emojiBg"></div>
+
+  <!-- Music -->
+  <audio id="bgm" src="song.mp3" preload="auto" loop></audio>
+
+  <!-- Main card -->
+  <div class="card" id="card">
+    <h1>Pumpkin, will you be my Valentine? 💘</h1>
+    <p class="subtitle">Only one answer is acceptable 😏💕</p>
+
+    <div class="stage" id="stage">
+      <button id="yes">Yes 💖</button>
+      <button id="no">No 💔</button>
+    </div>
+
+    <div class="hint">Tip: click anywhere to start the music 🎶</div>
+  </div>
+
+  <!-- Confetti canvas -->
+  <canvas id="fx"></canvas>
+
+  <!-- Hearts layer -->
+  <div id="hearts"></div>
+
+  <!-- After-yes overlay -->
+  <div class="overlay" id="overlay">
+    <div class="messageBox">
+      <h2>YAYYY!!! 💕🥰💍</h2>
+
+      <div class="messageGrid">
+        <div class="photoWrap">
+          <div class="photo">
+            <!-- Put your photo file in the same folder and name it: us.jpg (or change the src below) -->
+            <img id="ourPhoto" src="us.jpg" alt="Us 💖" />
+            <div class="photoBadge">Us 💖</div>
+          </div>
+        </div>
+
+        <p class="messageText" id="finalText"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // 1) Emoji background
+    const emojis = ["💖","💘","💕","😍","🥰","🌸","💝","❤️","💞","✨","🫶","🌷"];
+    const bg = document.getElementById("emojiBg");
+    function spawnEmojis(count = 45){
+      for(let i=0;i<count;i++){
+        const e = document.createElement("span");
+        e.className = "emoji";
+        e.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+        e.style.left = (Math.random()*100) + "vw";
+        e.style.animationDuration = (6 + Math.random()*10) + "s";
+        e.style.animationDelay = (-Math.random()*10) + "s";
+        e.style.fontSize = (1.4 + Math.random()*2.1) + "rem";
+        e.style.opacity = (0.55 + Math.random()*0.45).toFixed(2);
+        bg.appendChild(e);
+      }
+    }
+    spawnEmojis();
+
+    // 2) Music start on interaction
+    const bgm = document.getElementById("bgm");
+    let musicStarted = false;
+    async function startMusic(){
+      if(musicStarted) return;
+      musicStarted = true;
+      try{
+        bgm.volume = 0.9;
+        await bgm.play();
+      }catch(e){
+        musicStarted = false;
+      }
+    }
+    ["pointerdown","keydown","touchstart"].forEach(evt=>{
+      window.addEventListener(evt, startMusic, { once:true, passive:true });
+    });
+
+    // 3) NO button run away
+    const noBtn = document.getElementById("no");
+    const stage = document.getElementById("stage");
+
+    function moveNo(){
+      const stageRect = stage.getBoundingClientRect();
+      const btnRect = noBtn.getBoundingClientRect();
+      const maxX = stageRect.width - btnRect.width - 10;
+      const maxY = stageRect.height - btnRect.height - 10;
+      const x = Math.random() * maxX + 5;
+      const y = Math.random() * maxY + 5;
+      noBtn.style.left = x + "px";
+      noBtn.style.top  = y + "px";
+    }
+    function resetButtons(){
+      document.getElementById("yes").style.left = "28%";
+      document.getElementById("yes").style.top  = "60px";
+      noBtn.style.left = "56%";
+      noBtn.style.top  = "60px";
+    }
+    window.addEventListener("resize", resetButtons);
+    resetButtons();
+
+    noBtn.addEventListener("mouseenter", moveNo);
+    noBtn.addEventListener("mousemove", moveNo);
+    noBtn.addEventListener("touchstart", (e)=>{ e.preventDefault(); moveNo(); }, {passive:false});
+    noBtn.addEventListener("pointerenter", moveNo);
+
+    window.addEventListener("mousemove", (e)=>{
+      const r = noBtn.getBoundingClientRect();
+      const cx = r.left + r.width/2;
+      const cy = r.top + r.height/2;
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy);
+      if(dist < 120) moveNo();
+    }, { passive:true });
+
+    // 4) Confetti / Fireworks
+    const canvas = document.getElementById("fx");
+    const ctx = canvas.getContext("2d");
+    function sizeCanvas(){
+      const dpr = devicePixelRatio || 1;
+      canvas.width = window.innerWidth * dpr;
+      canvas.height = window.innerHeight * dpr;
+      canvas.style.width = window.innerWidth + "px";
+      canvas.style.height = window.innerHeight + "px";
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+    }
+    window.addEventListener("resize", sizeCanvas);
+    sizeCanvas();
+
+    function rand(min,max){ return Math.random()*(max-min)+min; }
+    let particles = [];
+    let animId = null;
+
+    function burst(x,y, count=140){
+      for(let i=0;i<count;i++){
+        const angle = rand(0, Math.PI*2);
+        const speed = rand(2.5, 8.5);
+        particles.push({
+          x, y,
+          vx: Math.cos(angle)*speed,
+          vy: Math.sin(angle)*speed - rand(1, 4),
+          g: rand(0.06, 0.14),
+          life: rand(60, 120),
+          size: rand(3, 7),
+          shape: Math.random() < 0.2 ? "heart" : "rect",
+          spin: rand(-0.2, 0.2),
+          rot: rand(0, Math.PI*2)
+        });
+      }
+    }
+
+    function drawHeart(x,y,s,rot){
+      ctx.save();
+      ctx.translate(x,y);
+      ctx.rotate(rot);
+      ctx.beginPath();
+      ctx.moveTo(0, s*0.35);
+      ctx.bezierCurveTo(s*0.8, -s*0.2, s*0.6, -s*1.1, 0, -s*0.6);
+      ctx.bezierCurveTo(-s*0.6, -s*1.1, -s*0.8, -s*0.2, 0, s*0.35);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function tick(){
+      ctx.clearRect(0,0,window.innerWidth, window.innerHeight);
+      particles = particles.filter(p => p.life > 0);
+      for(const p of particles){
+        p.life -= 1;
+        p.vy += p.g;
+        p.x += p.vx;
+        p.y += p.vy;
+        p.rot += p.spin;
+
+        const alpha = Math.max(0, Math.min(1, p.life/90));
+        ctx.globalAlpha = alpha;
+
+        const hue = (p.x + p.y + p.life) % 360;
+        ctx.fillStyle = `hsl(${hue} 90% 60%)`;
+
+        if(p.shape === "heart"){
+          drawHeart(p.x, p.y, p.size, p.rot);
+        }else{
+          ctx.save();
+          ctx.translate(p.x,p.y);
+          ctx.rotate(p.rot);
+          ctx.fillRect(-p.size/2, -p.size/2, p.size, p.size);
+          ctx.restore();
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      if(particles.length > 0) animId = requestAnimationFrame(tick);
+      else { cancelAnimationFrame(animId); animId = null; }
+    }
+
+    function startFireworks(){
+      canvas.classList.add("show");
+      const w = window.innerWidth, h = window.innerHeight;
+      const bursts = [
+        [w*0.25, h*0.35],
+        [w*0.72, h*0.30],
+        [w*0.50, h*0.25],
+        [w*0.35, h*0.55],
+        [w*0.66, h*0.58]
+      ];
+      let i = 0;
+      const interval = setInterval(()=>{
+        const [x,y] = bursts[i % bursts.length];
+        burst(x,y, 150);
+        i++;
+        if(!animId) tick();
+        if(i >= 8){
+          clearInterval(interval);
+          setTimeout(()=> canvas.classList.remove("show"), 1400);
+        }
+      }, 280);
+    }
+
+    // 5) Hearts during message
+    const heartsLayer = document.getElementById("hearts");
+    let heartsTimer = null;
+
+    function startHearts(){
+      heartsLayer.classList.add("show");
+      const heartChars = ["💗","💖","💘","💕","❤️","💝","💞","🫶"];
+      const spawn = () => {
+        const h = document.createElement("div");
+        h.className = "heart";
+        h.textContent = heartChars[Math.floor(Math.random()*heartChars.length)];
+
+        const left = Math.random() * 100;          // vw
+        const drift = (Math.random()*120 - 60);    // px
+        const rot = (Math.random()*80 - 40) + "deg";
+        const dur = (6 + Math.random()*6);         // seconds
+        const size = (16 + Math.random()*22);      // px
+
+        h.style.left = left + "vw";
+        h.style.setProperty("--drift", drift + "px");
+        h.style.setProperty("--rot", rot);
+        h.style.animationDuration = dur + "s";
+        h.style.fontSize = size + "px";
+        h.style.opacity = (0.55 + Math.random()*0.45).toFixed(2);
+
+        heartsLayer.appendChild(h);
+        setTimeout(()=> h.remove(), dur*1000 + 200);
+      };
+
+      for(let i=0;i<18;i++) setTimeout(spawn, i*80);
+      heartsTimer = setInterval(spawn, 220);
+    }
+
+    // 6) Typewriter
+    function typewriter(el, text, speed = 18){
+      el.innerHTML = "";
+      const cursor = document.createElement("span");
+      cursor.className = "cursor";
+      cursor.textContent = "▍";
+      el.appendChild(cursor);
+
+      let i = 0;
+      const timer = setInterval(()=>{
+        cursor.insertAdjacentText("beforebegin", text[i]);
+        i++;
+        if(i >= text.length){
+          clearInterval(timer);
+          cursor.remove();
+        }
+      }, speed);
+      return timer;
+    }
+
+    // 7) YES flow
+    const yesBtn = document.getElementById("yes");
+    const overlay = document.getElementById("overlay");
+    const finalText = document.getElementById("finalText");
+
+    const customMessage =
+`Thank you for being with me and for choosing me — and choosing us. Out of all the people in the world, you chose to be my Valentine, and that means more to me than I can put into words. I don’t take your love for granted for a second. Thank you for your patience, your love, and for choosing me every day, even with all my flaws and bad jokes 😄 I’m so grateful to walk through life with you. I’m yours, always — and I’d choose you in every lifetime ❤️`;
+
+    yesBtn.addEventListener("click", async ()=>{
+      await startMusic();
+
+      document.getElementById("card").style.display = "none";
+      startFireworks();
+
+      setTimeout(()=>{
+        overlay.classList.add("show");
+        startHearts();
+        typewriter(finalText, customMessage, 18);
+      }, 2200);
+    });
+
+    // Optional: If the photo file name is different, change src here:
+    // document.getElementById("ourPhoto").src = "myphoto.png";
+
+    // If your photo fails to load, try us.png instead of us.jpg:
+    document.getElementById("ourPhoto").addEventListener("error", () => {
+      document.getElementById("ourPhoto").src = "us.png";
+    });
+  </script>
+</body>
+</html>
